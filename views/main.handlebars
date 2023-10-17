@@ -1,0 +1,30 @@
+<!-- multistep form -->
+<div class="aParent">
+    <div>
+        <form id="msform">
+
+            <!-- fieldsets -->
+            <fieldset>
+                <h2 class="fs-title">Enter Topic</h2>
+                <input type="text" name="Topic" placeholder="Topic" />
+                <input type="button" name="next" class="action-button" value="Show Data" />
+            </fieldset>
+
+        </form>
+    </div>
+    <div>
+        <form id="msform">
+
+            <!-- fieldsets -->
+            <fieldset>
+                <h2 class="fs-title">Select Date to Download</h2>
+                <input type="text" name="daterange" />
+                <input type="button" name="next" class="action-button" value="Download" />
+            </fieldset>
+
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    $('input[name="daterange"]').daterangepicker();
+</script>

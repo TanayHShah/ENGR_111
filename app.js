@@ -1,5 +1,7 @@
 // Requiring module
 const express = require('express');
+const configRoutes = require("./routes");
+
 
 // Creating express object
 const app = express();
@@ -15,9 +17,7 @@ app.engine(
   })
 );
 app.set("view engine", "handlebars");
-app.get('/', (req, res) => {
-res.render('main', {layout : 'index'});
-});
+configRoutes(app);
 
 // Port Number
 const PORT = process.env.PORT ||5000;

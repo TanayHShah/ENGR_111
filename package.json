@@ -11,9 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-cognito-identity": "^3.431.0",
+    "@aws-sdk/client-dynamodb": "^3.431.0",
+    "@aws-sdk/client-sts": "^3.431.0",
+    "aes256": "^1.1.0",
     "aws-iot-device-sdk-v2": "^1.16.0",
+    "body-parser": "^1.20.2",
     "express": "^4.17.1",
     "express-handlebars": "^7.1.2",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "winston": "^3.11.0"
   }
 }

@@ -1,19 +1,20 @@
 <!-- multistep form -->
 <div class="aParent">
     <div>
-        <form id="msform">
+        <form id="msform" class="display-form">
 
             <!-- fieldsets -->
             <fieldset>
                 <h2 class="fs-title">Enter Topic</h2>
-                <input type="text" name="Topic" placeholder="Topic" />
-                <input type="button" name="next" class="action-button" value="Show Data" />
+                <input type="text" name="topic" id="topic_name"  class="stop-fetch"
+                    placeholder="Topic" />
+                <input type="submit" name="next" class="action-button" value="Show Data" />
             </fieldset>
 
         </form>
     </div>
     <div>
-        <form id="msform">
+        <form id="download" class="display-form">
 
             <!-- fieldsets -->
             <fieldset>
@@ -25,6 +26,74 @@
         </form>
     </div>
 </div>
+<div class="cards" id="display-div" style="display: none;">
+    <div class="card card-1">
+        <div class="card__icon"><i class="fas fa-bolt"></i></div>
+        <p class="card__exit"><i class="fas fa-times"></i></p>
+        <h2 class="card__title">34</h2>
+        <p class="card__apply">
+            <a class="card__link" href="#">Apply Now <i class="fas fa-arrow-right"></i></a>
+        </p>
+    </div>
+    <div class="card card-2">
+        <div class="card__icon"><i class="fas fa-bolt"></i></div>
+        <p class="card__exit"><i class="fas fa-times"></i></p>
+        <h2 class="card__title">23</h2>
+        <p class="card__apply">
+            <a class="card__link" href="#">Apply Now <i class="fas fa-arrow-right"></i></a>
+        </p>
+    </div>
+</div>
+
 <script type="text/javascript">
-    $('input[name="daterange"]').daterangepicker();
+    jQuery('#topic_name').on('input', function () {
+        jQuery("#display-div").hide();
+        jQuery("#topic_name").addClass("stop-fetch");
+    });
+    jQuery(document).ready(function () {
+
+
+        $('input[name="daterange"]').daterangepicker();
+        jQuery("#msform").validate({
+            ignore: [],
+            rules: {
+                topic: {
+                    required: true,
+                },
+            }
+        })
+
+
+
+        const form = document.getElementById('msform');
+
+        form.addEventListener('submit', function (event) {
+            const label = document.querySelector('label[for="topic_name"]');
+
+            // Wait for 5 seconds before removing the label
+            if (label) {
+                setTimeout(function () {
+                    label.style.display = "none";
+                }, 5000);
+            }
+            const $form = jQuery("#msform");
+            const result = $form.valid()
+            event.preventDefault(); // Prevent the default form submission
+            if (result) {
+                jQuery("#display-div").show();
+                jQuery("#topic_name").removeClass("stop-fetch");
+                jQuery.ajax({
+                    url: '/topic',
+                    type: 'POST',
+                    data: $form.serialize()
+                }).done(response => {
+                }).fail(function (xhr, textStatus, errorThrown) {
+
+                });
+            }
+        });
+
+
+    })
+
 </script>

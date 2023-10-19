@@ -14,9 +14,10 @@ html {
   /*background = gradient + image pattern combo*/
   background: linear-gradient(rgba(39, 20, 1, 0.6), rgba(220, 36, 36, 0.6));
 }
-.aParent  {
+
+.aParent {
   display: flex;
-} 
+}
 
 .topnav {
   background-color: #a32638;
@@ -24,7 +25,7 @@ html {
 }
 
 /* Style the links inside the navigation bar */
-.topnav p{
+.topnav p {
   float: left;
   color: #f2f2f2;
   text-align: center;
@@ -38,14 +39,16 @@ html {
 body {
   font-family: montserrat, arial, verdana;
 }
+
 /*form styles*/
-#msform {
+.display-form {
   width: 400px;
   margin: 50px auto;
   text-align: center;
   position: relative;
 }
-#msform fieldset {
+
+.display-form fieldset {
   background: white;
   border: 0 none;
   border-radius: 3px;
@@ -58,13 +61,15 @@ body {
   /*stacking fieldsets above each other*/
   position: relative;
 }
+
 /*Hide all except first fieldset*/
-#msform fieldset:not(:first-of-type) {
+.display-form fieldset:not(:first-of-type) {
   display: none;
 }
+
 /*inputs*/
-#msform input,
-#msform textarea {
+.display-form input,
+.display-form textarea {
   padding: 15px;
   border: 1px solid #ccc;
   border-radius: 3px;
@@ -75,8 +80,9 @@ body {
   color: #2c3e50;
   font-size: 13px;
 }
+
 /*buttons*/
-#msform .action-button {
+.display-form .action-button {
   width: 100px;
   background: #27ae60;
   font-weight: bold;
@@ -89,10 +95,12 @@ body {
   text-decoration: none;
   font-size: 14px;
 }
-#msform .action-button:hover,
-#msform .action-button:focus {
+
+.display-form .action-button:hover,
+.display-form .action-button:focus {
   box-shadow: 0 0 0 2px white, 0 0 0 3px #27ae60;
 }
+
 /*headings*/
 .fs-title {
   font-size: 15px;
@@ -100,12 +108,14 @@ body {
   color: #2c3e50;
   margin-bottom: 10px;
 }
+
 .fs-subtitle {
   font-weight: normal;
   font-size: 13px;
   color: #666;
   margin-bottom: 20px;
 }
+
 /*progressbar*/
 #progressbar {
   margin-bottom: 30px;
@@ -113,6 +123,7 @@ body {
   /*CSS counters to number the steps*/
   counter-reset: step;
 }
+
 #progressbar li {
   list-style-type: none;
   color: white;
@@ -122,6 +133,7 @@ body {
   float: left;
   position: relative;
 }
+
 #progressbar li:before {
   content: counter(step);
   counter-increment: step;
@@ -134,6 +146,7 @@ body {
   border-radius: 3px;
   margin: 0 auto 5px auto;
 }
+
 /*progressbar connectors*/
 #progressbar li:after {
   content: "";
@@ -143,16 +156,140 @@ body {
   position: absolute;
   left: -50%;
   top: 9px;
-  z-index: -1; /*put it behind the numbers*/
+  z-index: -1;
+  /*put it behind the numbers*/
 }
+
 #progressbar li:first-child:after {
   /*connector not needed before the first step*/
   content: none;
 }
+
 /*marking active/completed steps green*/
 /*The number of the step and the connector before it = green*/
 #progressbar li.active:before,
 #progressbar li.active:after {
   background: #27ae60;
   color: white;
+}
+
+
+.main-container {
+  padding: 30px;
+}
+
+/* HEADING */
+
+.heading {
+  text-align: center;
+}
+
+.heading__title {
+  font-weight: 600;
+}
+
+.heading__credits {
+  margin: 10px 0px;
+  color: #888888;
+  font-size: 25px;
+  transition: all 0.5s;
+}
+
+.heading__link {
+  text-decoration: none;
+}
+
+.heading__credits .heading__link {
+  color: inherit;
+}
+
+/* CARDS */
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.card {
+  margin: 20px;
+  padding: 20px;
+  width: 100px;
+  min-height: 200px;
+  display: grid;
+  grid-template-rows: 20px 50px 1fr 50px;
+  border-radius: 10px;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.4);
+  transform: scale(1.01);
+}
+
+.card__link,
+.card__exit,
+.card__icon {
+  position: relative;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card__link::after {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  content: "";
+  width: 0%;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.6);
+  transition: all 0.5s;
+}
+
+.card__link:hover::after {
+  width: 100%;
+}
+
+.card__exit {
+  grid-row: 1/2;
+  justify-self: end;
+}
+
+.card__icon {
+  grid-row: 2/3;
+  font-size: 30px;
+}
+
+.card__title {
+  grid-row: 3/4;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+.card__apply {
+  grid-row: 4/5;
+  align-self: center;
+}
+
+/* CARD BACKGROUNDS */
+
+.card-1 {
+  background: radial-gradient(#60efbc, #58d5c9);
+}
+
+.card-2 {
+  background: radial-gradient(#f588d8, #c0a3e5);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1600px) {
+  .cards {
+    justify-content: center;
+  }
+}
+
+.error {
+  color: red;
 }

@@ -1,69 +1,121 @@
-const express = require("express");
-const router = express.Router();
-const logger = require("../utils/logger");
-const { DynamoDBClient, QueryCommand } = require('@aws-sdk/client-dynamodb');
-const dynamoDBConfig = {
-    region: 'us-east-1',
-    credentials: {
-        accessKeyId: 'AKIARNO54IOA37WAHO6A',
-        secretAccessKey: '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',
-    },
-};
+<!-- multistep form -->
+<div class="aParent">
+    <div>
+        <form id="msform" class="display-form">
 
-const dynamoDB = new DynamoDBClient(dynamoDBConfig);
-const timeConverter = async (UNIX_timestamp) => {
+            <!-- fieldsets -->
+            <fieldset>
+                <h2 class="fs-title">Enter Topic</h2>
+                <input type="text" name="topic" id="topic_name" class="stop-fetch" placeholder="Topic" />
+                <input type="submit" name="next" class="action-button" value="Show Data" />
+            </fieldset>
 
-    var a = new Date(UNIX_timestamp * 1000);
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var year = a.getFullYear();
-    var month = months[a.getMonth()];
-    var date = (a.getDate() < 10) ? '0' + a.getDate() : a.getDate();
-    var hour = (a.getHours() < 10) ? '0' + a.getHours() : a.getHours();
-    var min = (a.getMinutes() < 10) ? '0' + a.getMinutes() : a.getMinutes();
-    var sec = (a.getSeconds() < 10) ? '0' + a.getSeconds() : a.getSeconds();
-    var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
-    return time;
-}
+        </form>
+    </div>
+    <div>
+        <form id="download" class="display-form">
+
+            <!-- fieldsets -->
+            <fieldset>
+                <h2 class="fs-title">Select Date to Download</h2>
+                <input type="text" name="daterange" />
+                <input type="button" name="next" class="action-button" value="Download" />
+            </fieldset>
+
+        </form>
+    </div>
+</div>
+<div class="cards" id="display-div" style="display: none;">
+    <div class="card card-1">
+         <table id="add_data">
+            <tbody></tbody>
+         </table>
+        <p class="card__apply">
+            <a class="card__link" id="timestamp_1"><i class="fas fa-arrow-right"></i></a>
+        </p>
+    </div>
+</div>
+
+<script type="text/javascript">
+    jQuery('#topic_name').on('input', function () {
+        jQuery("#display-div").hide();
+        jQuery("#topic_name").addClass("stop-fetch");
+    });
+    jQuery(document).ready(function () {
+        setInterval(function () {
+            if (!jQuery("#topic_name").hasClass('stop-fetch')) {
+                sendAjaxRequest($('#topic_name').val())
+            }
+        }, 5000);
+
+        $('input[name="daterange"]').daterangepicker();
+        jQuery("#msform").validate({
+            ignore: [],
+            rules: {
+                topic: {
+                    required: true,
+                },
+            }
+        })
 
 
-router.route("/").get(async (req, res) => {
-    res.render('main', { layout: 'index' });
-}
-);
 
-router.route("/topic").post(async (req, res) => {
-    const topic = req.body.topic;
-    let data = new Array()
-    const tableName = 'engr111_data_collection';
-    const params = {
-        TableName: tableName,
-        KeyConditionExpression: '#topic = :topic',
-        ExpressionAttributeNames: {
-            '#topic': 'topic',
-        },
-        ExpressionAttributeValues: {
-            ':topic': { S: topic },
-        },
-        ScanIndexForward: false, // Sort in descending order (latest first)
-        Limit: 100, // Limit to 2 records
-    };
+        const form = document.getElementById('msform');
 
-    const command = new QueryCommand(params);
+        form.addEventListener('submit', function (event) {
+            const label = document.querySelector('label[for="topic_name"]');
 
-    try {
-        const result = await dynamoDB.send(command);
-        for (let i = 1; i <= result.Items.length; i++) {
-            const item = result.Items[i - 1];
-            const displayDate = await timeConverter(item.timestamp.N);
-            data.push({ payload: item.payload.S, timestamp: displayDate });
+            // Wait for 5 seconds before removing the label
+            if (label) {
+                setTimeout(function () {
+                    label.style.display = "none";
+                }, 5000);
+            }
+            const $form = jQuery("#msform");
+            const result = $form.valid()
+            event.preventDefault(); // Prevent the default form submission
+            if (result) {
+                sendAjaxRequest($("#topic_name").val())
+            }
+        });
 
-        }
-    } catch (error) {
-        logger.info("Error:" + error)
-        data = []
+    })
+
+    function sendAjaxRequest(topicName) {
+        jQuery.ajax({
+            url: '/topic',
+            type: 'POST',
+            data: { topic: topicName }
+        }).done(response => {
+            if (response.data && Object.keys(response.data).length != 0) {
+                jQuery("#display-div").show();
+                jQuery("#topic_name").removeClass("stop-fetch");
+                 var dataList = document.getElementById('add_data');
+                 jQuery("#add_data tbody").html('');
+var newRow = $("<tr>");
+     var cols = "";
+                cols += '<th>TIMESTAMP</th>';
+                cols += '<th>PAYLOAD</th>';
+                  newRow.append(cols);
+                    $("#add_data tbody").append(newRow);
+
+            response.data.forEach(function(item) {
+                var newRow = $("<tr>");
+                var cols = "";
+                cols += '<td>' +item.timestamp+'</td>';
+                 cols += '<td>' +item.payload + '</td>';
+                  newRow.append(cols);
+                       $("#add_data tbody").append(newRow);
+
+            });
+            }
+        }).fail(function (xhr, textStatus, errorThrown) {
+            jQuery("#display-div").hide();
+            jQuery("#topic_name").addClass("stop-fetch");
+            jQuery("#add_data tbody").html('');
+        });
     }
-    return res.json({ data: data })
-}
-);
 
-module.exports = router;
+    
+
+</script>

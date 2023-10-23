@@ -214,13 +214,14 @@ body {
 .card {
   margin: 20px;
   padding: 20px;
-  width: 300px;
+  width: 500px;
   min-height: 200px;
-  display: grid;
+  display: flex;
   grid-template-rows: 20px 50px 1fr 50px;
   border-radius: 10px;
   box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.25);
   transition: all 0.2s;
+  
 }
 
 .card:hover {
@@ -292,4 +293,22 @@ body {
 
 .error {
   color: red;
+}
+
+#add_data {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+/* Apply styles to table headers (th) */
+#add_data th {
+  border: 1px solid #000;
+  padding: 10px;
+}
+
+/* Apply styles to table cells (td) */
+#add_data td {
+  border: 1px solid #000;
+  padding: 10px;
 }

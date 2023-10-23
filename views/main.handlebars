@@ -6,8 +6,7 @@
             <!-- fieldsets -->
             <fieldset>
                 <h2 class="fs-title">Enter Topic</h2>
-                <input type="text" name="topic" id="topic_name"  class="stop-fetch"
-                    placeholder="Topic" />
+                <input type="text" name="topic" id="topic_name" class="stop-fetch" placeholder="Topic" />
                 <input type="submit" name="next" class="action-button" value="Show Data" />
             </fieldset>
 
@@ -30,20 +29,20 @@
     <div class="card card-1">
         <div class="card__icon"><i class="fas fa-bolt"></i></div>
         <p class="card__exit"><i class="fas fa-times"></i></p>
-        <h2 class="card__title">34</h2>
+        <div id="cards-container">
+
+        </div>
         <p class="card__apply">
-            <a class="card__link" href="#">Apply Now <i class="fas fa-arrow-right"></i></a>
-        </p>
-    </div>
-    <div class="card card-2">
-        <div class="card__icon"><i class="fas fa-bolt"></i></div>
-        <p class="card__exit"><i class="fas fa-times"></i></p>
-        <h2 class="card__title">23</h2>
-        <p class="card__apply">
-            <a class="card__link" href="#">Apply Now <i class="fas fa-arrow-right"></i></a>
+            <a class="card__link" id="timestamp_1"><i class="fas fa-arrow-right"></i></a>
         </p>
     </div>
 </div>
+
+<script id="card-template" type="text/x-handlebars-template">
+    <ul id="add_data">
+        <li class="card__title">{{payload}} - {{timestamp}}</li>
+    </ul>
+</script>
 
 <script type="text/javascript">
     jQuery('#topic_name').on('input', function () {
@@ -51,7 +50,11 @@
         jQuery("#topic_name").addClass("stop-fetch");
     });
     jQuery(document).ready(function () {
-
+        setInterval(function () {
+            if (!jQuery("#topic_name").hasClass('stop-fetch')) {
+                sendAjaxRequest($('#topic_name').val())
+            }
+        }, 5000);
 
         $('input[name="daterange"]').daterangepicker();
         jQuery("#msform").validate({
@@ -80,20 +83,51 @@
             const result = $form.valid()
             event.preventDefault(); // Prevent the default form submission
             if (result) {
-                jQuery("#display-div").show();
-                jQuery("#topic_name").removeClass("stop-fetch");
-                jQuery.ajax({
-                    url: '/topic',
-                    type: 'POST',
-                    data: $form.serialize()
-                }).done(response => {
-                }).fail(function (xhr, textStatus, errorThrown) {
-
-                });
+                sendAjaxRequest($("#topic_name").val())
             }
         });
 
-
     })
+
+    function sendAjaxRequest(topicName) {
+        jQuery.ajax({
+            url: '/topic',
+            type: 'POST',
+            data: { topic: topicName }
+        }).done(response => {
+            if (response.data && Object.keys(response.data).length != 0) {
+                jQuery("#display-div").show();
+                jQuery("#topic_name").removeClass("stop-fetch");
+                renderResponse(response.data);
+            } else {
+                jQuery("#display-div").hide();
+                jQuery("#topic_name").addClass("stop-fetch");
+            }
+        }).fail(function (xhr, textStatus, errorThrown) {
+            jQuery("#display-div").hide();
+            jQuery("#topic_name").addClass("stop-fetch");
+        });
+    }
+
+    function renderResponse(response) {
+        try {
+            const source = document.getElementById('card-template').innerHTML;
+            const template = Handlebars.compile(source);
+
+            // Get the container where you want to append the cards
+            const container = document.getElementById('cards-container');
+
+            // Clear the existing content in the container if needed
+            container.innerHTML = '';
+
+            // Iterate over the data and append a card for each item
+            response.forEach(item => {
+                const cardHtml = template(item);
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        } catch (error) {
+            console.error("Error rendering data:", error);
+        }
+    }
 
 </script>

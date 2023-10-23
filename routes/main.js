@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const logger = require("../utils/logger");
-const { DynamoDBClient, ScanCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, QueryCommand } = require('@aws-sdk/client-dynamodb');
 const dynamoDBConfig = {
     region: 'us-east-1',
     credentials: {
@@ -11,6 +11,19 @@ const dynamoDBConfig = {
 };
 
 const dynamoDB = new DynamoDBClient(dynamoDBConfig);
+const timeConverter = async (UNIX_timestamp) => {
+
+    var a = new Date(UNIX_timestamp * 1000);
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var year = a.getFullYear();
+    var month = months[a.getMonth()];
+    var date = (a.getDate() < 10) ? '0' + a.getDate() : a.getDate();
+    var hour = (a.getHours() < 10) ? '0' + a.getHours() : a.getHours();
+    var min = (a.getMinutes() < 10) ? '0' + a.getMinutes() : a.getMinutes();
+    var sec = (a.getSeconds() < 10) ? '0' + a.getSeconds() : a.getSeconds();
+    var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+    return time;
+}
 
 
 router.route("/").get(async (req, res) => {
@@ -20,34 +33,36 @@ router.route("/").get(async (req, res) => {
 
 router.route("/topic").post(async (req, res) => {
     const topic = req.body.topic;
-    let data = {};
+    let data = new Array()
     const tableName = 'engr111_data_collection';
     const params = {
         TableName: tableName,
-        FilterExpression: 'topic = :topic',
+        KeyConditionExpression: '#topic = :topic',
+        ExpressionAttributeNames: {
+            '#topic': 'topic',
+        },
         ExpressionAttributeValues: {
             ':topic': { S: topic },
         },
-        Limit: 2, // Limit to the latest 2 rows
+        ScanIndexForward: false, // Sort in descending order (latest first)
+        Limit: 100, // Limit to 2 records
     };
 
-    const command = new ScanCommand(params);
+    const command = new QueryCommand(params);
 
     try {
         const result = await dynamoDB.send(command);
         for (let i = 1; i <= result.Items.length; i++) {
             const item = result.Items[i - 1];
-            data['payload_' + i] = item.payload.S;
-            const timestamp = new Date(item.timestamp.S);
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            const displayDate = timestamp.toLocaleDateString('en-US', options);
-            data['timestamp_' + i] = displayDate;
+            const displayDate = await timeConverter(item.timestamp.N);
+            data.push({ payload: item.payload.S, timestamp: displayDate });
+
         }
-        console.log(data);
     } catch (error) {
-        data = {}
+        logger.info("Error:" + error)
+        data = []
     }
-    return res.json({ topic: topic })
+    return res.json({ data: data })
 }
 );
 

@@ -1,8 +1,0 @@
-info: Oct-24-2023 13:25:48: 	Error:ValidationException: Invalid FilterExpression: Attribute name is a reserved keyword; reserved keyword: timestamp
-info: Oct-24-2023 13:26:59: 	Error:ValidationException: Filter Expression can only contain non-primary key attributes: Primary key attribute: timestamp
-info: Oct-24-2023 13:28:19: 	Error:ValidationException: Either the KeyConditions or KeyConditionExpression parameter must be specified in the request.
-info: Oct-24-2023 13:31:30: 	Error:Error: Can't set headers after they are sent.
-info: Oct-24-2023 13:49:32: 	Error:Error: Can't set headers after they are sent.
-info: Oct-24-2023 13:54:01: 	Error:Error: Can't set headers after they are sent.
-info: Oct-24-2023 13:57:28: 	Error:Error: ENOENT: no such file or directory, stat 'C:\Users\lab3_\AppData\Local\Temp\output.txt'
-info: Oct-24-2023 13:57:28: 	Error: Deleting Temporary File - Error: ENOENT: no such file or directory, unlink 'C:\Users\lab3_\AppData\Local\Temp\output.txt'

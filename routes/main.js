@@ -1,121 +1,141 @@
-<!-- multistep form -->
-<div class="aParent">
-    <div>
-        <form id="msform" class="display-form">
-
-            <!-- fieldsets -->
-            <fieldset>
-                <h2 class="fs-title">Enter Topic</h2>
-                <input type="text" name="topic" id="topic_name" class="stop-fetch" placeholder="Topic" />
-                <input type="submit" name="next" class="action-button" value="Show Data" />
-            </fieldset>
-
-        </form>
-    </div>
-    <div>
-        <form id="download" class="display-form">
-
-            <!-- fieldsets -->
-            <fieldset>
-                <h2 class="fs-title">Select Date to Download</h2>
-                <input type="text" name="daterange" />
-                <input type="button" name="next" class="action-button" value="Download" />
-            </fieldset>
-
-        </form>
-    </div>
-</div>
-<div class="cards" id="display-div" style="display: none;">
-    <div class="card card-1">
-         <table id="add_data">
-            <tbody></tbody>
-         </table>
-        <p class="card__apply">
-            <a class="card__link" id="timestamp_1"><i class="fas fa-arrow-right"></i></a>
-        </p>
-    </div>
-</div>
-
-<script type="text/javascript">
-    jQuery('#topic_name').on('input', function () {
-        jQuery("#display-div").hide();
-        jQuery("#topic_name").addClass("stop-fetch");
-    });
-    jQuery(document).ready(function () {
-        setInterval(function () {
-            if (!jQuery("#topic_name").hasClass('stop-fetch')) {
-                sendAjaxRequest($('#topic_name').val())
-            }
-        }, 5000);
-
-        $('input[name="daterange"]').daterangepicker();
-        jQuery("#msform").validate({
-            ignore: [],
-            rules: {
-                topic: {
-                    required: true,
-                },
-            }
-        })
+const express = require("express");
+const router = express.Router();
+const logger = require("../utils/logger");
+const fs = require('fs');
+const { dirname } = require('path');
+const appDir = dirname(require.main.filename);
+const { DynamoDBClient, QueryCommand } = require('@aws-sdk/client-dynamodb');
+const dynamoDBConfig = {
+    region: 'us-east-1',
+    credentials: {
+        accessKeyId: 'AKIARNO54IOA37WAHO6A',
+        secretAccessKey: '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',
+    },
+};
 
 
+const dynamoDB = new DynamoDBClient(dynamoDBConfig);
+const timeConverter = async (UNIX_timestamp) => {
 
-        const form = document.getElementById('msform');
+    var a = new Date(UNIX_timestamp * 1000);
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var year = a.getFullYear();
+    var month = months[a.getMonth()];
+    var date = (a.getDate() < 10) ? '0' + a.getDate() : a.getDate();
+    var hour = (a.getHours() < 10) ? '0' + a.getHours() : a.getHours();
+    var min = (a.getMinutes() < 10) ? '0' + a.getMinutes() : a.getMinutes();
+    var sec = (a.getSeconds() < 10) ? '0' + a.getSeconds() : a.getSeconds();
+    var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+    return time;
+}
 
-        form.addEventListener('submit', function (event) {
-            const label = document.querySelector('label[for="topic_name"]');
 
-            // Wait for 5 seconds before removing the label
-            if (label) {
-                setTimeout(function () {
-                    label.style.display = "none";
-                }, 5000);
-            }
-            const $form = jQuery("#msform");
-            const result = $form.valid()
-            event.preventDefault(); // Prevent the default form submission
-            if (result) {
-                sendAjaxRequest($("#topic_name").val())
-            }
-        });
+router.route("/").get(async (req, res) => {
+    res.render('main', { layout: 'index' });
+}
+);
 
-    })
+router.route("/topic").post(async (req, res) => {
+    const topic = req.body.topic;
+    let data = new Array()
+    const tableName = 'engr111_data_collection';
+    const params = {
+        TableName: tableName,
+        KeyConditionExpression: '#topic = :topic',
+        ExpressionAttributeNames: {
+            '#topic': 'topic',
+        },
+        ExpressionAttributeValues: {
+            ':topic': { S: topic },
+        },
+        ScanIndexForward: false, // Sort in descending order (latest first)
+        Limit: 100, // Limit to 2 records
+    };
 
-    function sendAjaxRequest(topicName) {
-        jQuery.ajax({
-            url: '/topic',
-            type: 'POST',
-            data: { topic: topicName }
-        }).done(response => {
-            if (response.data && Object.keys(response.data).length != 0) {
-                jQuery("#display-div").show();
-                jQuery("#topic_name").removeClass("stop-fetch");
-                 var dataList = document.getElementById('add_data');
-                 jQuery("#add_data tbody").html('');
-var newRow = $("<tr>");
-     var cols = "";
-                cols += '<th>TIMESTAMP</th>';
-                cols += '<th>PAYLOAD</th>';
-                  newRow.append(cols);
-                    $("#add_data tbody").append(newRow);
+    const command = new QueryCommand(params);
 
-            response.data.forEach(function(item) {
-                var newRow = $("<tr>");
-                var cols = "";
-                cols += '<td>' +item.timestamp+'</td>';
-                 cols += '<td>' +item.payload + '</td>';
-                  newRow.append(cols);
-                       $("#add_data tbody").append(newRow);
+    try {
+        const result = await dynamoDB.send(command);
+        for (let i = 1; i <= result.Items.length; i++) {
+            const item = result.Items[i - 1];
+            const displayDate = await timeConverter(item.timestamp.N);
+            data.push({ payload: item.payload.S, timestamp: displayDate });
 
-            });
-            }
-        }).fail(function (xhr, textStatus, errorThrown) {
-            jQuery("#display-div").hide();
-            jQuery("#topic_name").addClass("stop-fetch");
-            jQuery("#add_data tbody").html('');
-        });
+        }
+    } catch (error) {
+        logger.info("Error:" + error)
+        data = []
     }
+    return res.json({ data: data })
+}
+);
 
-    
+router.route("/daterange").post(async (req, res) => {
+    const dateRange = req.body.dateRange;
+    const [startDateStr, endDateStr] = dateRange.split(" - ");
 
-</script>
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    const startDateUnixTimestamp = String(Math.floor(startDate.getTime() / 1000));
+    const endDateUnixTimestamp = String(Math.floor(endDate.getTime() / 1000));
+    const topic = req.body.topic;
+    const tableName = 'engr111_data_collection';
+    const params = {
+        TableName: tableName,
+        KeyConditionExpression: '#topic = :topic AND #timestamp BETWEEN :from AND :to',
+        ExpressionAttributeNames: {
+            '#topic': 'topic',
+            '#timestamp': 'timestamp',
+        },
+        ExpressionAttributeValues: {
+            ':topic': { S: topic },
+            ':from': { N: startDateUnixTimestamp },
+            ':to': { N: endDateUnixTimestamp },
+        },
+    };
+    const command = new QueryCommand(params);
+
+    let returnResult = { message: '', status: 200 };
+    try {
+        const result = await dynamoDB.send(command);
+        if (result.Items.length) {
+            let data = [];
+            for (let i = 1; i <= result.Items.length; i++) {
+                const item = result.Items[i - 1];
+                const displayDate = await timeConverter(item.timestamp.N);
+                data.push({ payload: item.payload.S, timestamp: displayDate });
+
+            }
+
+
+            const jsonData = JSON.stringify(data, null, 2);
+            // Save the data to a text file
+            fs.writeFile('output.txt', jsonData, 'utf8', (fileErr) => {
+                if (fileErr) {
+                    returnResult.message = "Error: Writing File Error";
+                    returnResult.status = 500
+                    logger.info("Error: Writing File Error")
+                } else {
+                    // res.download('output.txt', topic + '.txt', (downloadErr) => {
+                    //     if (downloadErr) {
+                    //         returnResult.message = "Error:" + downloadErr;
+                    //         returnResult.status = 500;
+                    //         logger.info("Error:" + downloadErr);
+                    //     }
+                    // });
+
+                }
+            });
+        } else {
+            returnResult.message = "No data to download for given topic";
+            returnResult.status = 400;
+        }
+    } catch (error) {
+        let message = "Error:" + error;
+        logger.info("Error:" + error)
+        return res.json({ message: message, status: 500, file: appDir + '/output.txt' });
+    }
+    return res.json({ message: returnResult.message, status: returnResult.status, file: appDir + '/output.txt' })
+}
+);
+module.exports = router;

@@ -43,7 +43,7 @@ body {
 /*form styles*/
 .display-form {
   width: 400px;
-  margin: 50px auto;
+  margin: 50px;
   text-align: center;
   position: relative;
 }
@@ -212,16 +212,13 @@ body {
 }
 
 .card {
-  margin: 20px;
-  padding: 20px;
-  width: 500px;
+  width: 400px;
   min-height: 200px;
   display: flex;
   grid-template-rows: 20px 50px 1fr 50px;
   border-radius: 10px;
-  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.25);
   transition: all 0.2s;
-  
+
 }
 
 .card:hover {
@@ -276,20 +273,16 @@ body {
 /* CARD BACKGROUNDS */
 
 .card-1 {
-  background: radial-gradient(#60efbc, #58d5c9);
+  background: white;
 }
 
-.card-2 {
-  background: radial-gradient(#f588d8, #c0a3e5);
+canvas {
+  background: white;
 }
 
 /* RESPONSIVE */
 
-@media (max-width: 1600px) {
-  .cards {
-    justify-content: center;
-  }
-}
+
 
 .error {
   color: red;
@@ -297,18 +290,10 @@ body {
 
 #add_data {
   width: 100%;
-  border-collapse: collapse;
   text-align: center;
 }
 
-/* Apply styles to table headers (th) */
-#add_data th {
-  border: 1px solid #000;
-  padding: 10px;
-}
-
-/* Apply styles to table cells (td) */
-#add_data td {
-  border: 1px solid #000;
-  padding: 10px;
+.table_text {
+  font-size: small;
+  font-weight: 50;
 }

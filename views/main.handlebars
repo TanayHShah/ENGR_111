@@ -1,4 +1,3 @@
-<!-- multistep form -->
 <div class="aParent">
     <div>
         <form id="msform" class="display-form">
@@ -18,31 +17,27 @@
             <!-- fieldsets -->
             <fieldset>
                 <h2 class="fs-title">Select Date to Download</h2>
-                <input type="text" name="daterange" />
-                <input type="button" name="next" class="action-button" value="Download" />
+                <input type="text" name="daterange" id="daterange_name" />
+                <input type="submit" name="next" class="action-button" value="Download" />
             </fieldset>
 
         </form>
     </div>
 </div>
 <div class="cards" id="display-div" style="display: none;">
-    <div class="card card-1">
-        <div class="card__icon"><i class="fas fa-bolt"></i></div>
-        <p class="card__exit"><i class="fas fa-times"></i></p>
-        <div id="cards-container">
-
+    <div class="aParent">
+        <div class="display-form">
+            <fieldset class="display-form">
+                <table id="add_data">
+                    <tbody></tbody>
+                </table>
+            </fieldset>
         </div>
-        <p class="card__apply">
-            <a class="card__link" id="timestamp_1"><i class="fas fa-arrow-right"></i></a>
-        </p>
+        <div class="line-chart">
+            <canvas id="line-chart" width="900px"></canvas>
+        </div>
     </div>
 </div>
-
-<script id="card-template" type="text/x-handlebars-template">
-    <ul id="add_data">
-        <li class="card__title">{{payload}} - {{timestamp}}</li>
-    </ul>
-</script>
 
 <script type="text/javascript">
     jQuery('#topic_name').on('input', function () {
@@ -66,9 +61,36 @@
             }
         })
 
+        jQuery("#display-form").validate({
+            ignore: [],
+            rules: {
+                topic: {
+                    daterange: true,
+                },
+            }
+        })
+
 
 
         const form = document.getElementById('msform');
+        const display_form = document.getElementById('download');
+        display_form.addEventListener('submit', function (event) {
+            const label = document.querySelector('label[for="daterange_name"]');
+
+            // Wait for 5 seconds before removing the label
+            if (label) {
+                setTimeout(function () {
+                    label.style.display = "none";
+                }, 5000);
+            }
+            const $form = jQuery("#download");
+            const result = $form.valid()
+            const topicResult = $("#msform").valid();
+            event.preventDefault(); // Prevent the default form submission
+            if (result && topicResult) {
+                sendDownloadAjaxRequest($("#daterange_name").val(), $('#topic_name').val())
+            }
+        });
 
         form.addEventListener('submit', function (event) {
             const label = document.querySelector('label[for="topic_name"]');
@@ -98,36 +120,88 @@
             if (response.data && Object.keys(response.data).length != 0) {
                 jQuery("#display-div").show();
                 jQuery("#topic_name").removeClass("stop-fetch");
-                renderResponse(response.data);
-            } else {
-                jQuery("#display-div").hide();
-                jQuery("#topic_name").addClass("stop-fetch");
+                var dataList = document.getElementById('add_data');
+                jQuery("#add_data tbody").html('');
+                var newRow = $("<tr>");
+                var cols = "";
+                cols += '<th class="table_text">TIMESTAMP</th>';
+                cols += '<th class="table_text">PAYLOAD</th>';
+                newRow.append(cols);
+                $("#add_data tbody").append(newRow);
+                let dateArray = [];
+                let dataArray = [];
+                let i = 0;
+                response.data.forEach(function (item) {
+                    var newRow = $("<tr>");
+                    var cols = "";
+                    cols += '<td class="table_text">' + item.timestamp + '</td>';
+                    cols += '<td class="table_text">' + item.payload + '</td>';
+                    if (i % 2 === 0) {
+                        dateArray.push(item.timestamp);
+                    } else {
+                        dateArray.push('')
+                    }
+                    dataArray.push(item.payload);
+                    newRow.append(cols);
+                    $("#add_data tbody").append(newRow);
+                    i++;
+
+                });
+                var existingChart = Chart.getChart("line-chart");
+
+
+                if (existingChart) {
+                    // Update the existing chart with new data
+                    existingChart.data.labels = dateArray;
+                    existingChart.data.datasets[0].data = dataArray;
+                    existingChart.update();
+                } else {
+                    new Chart(document.getElementById("line-chart"), {
+                        type: 'line',
+                        data: {
+                            labels: dateArray,
+                            datasets: [
+                                {
+                                    data: dataArray,
+                                    label: topicName,
+                                    borderColor: "#3cba9f",
+                                    fill: false
+                                }]
+                        },
+                        options: {
+                            legend: {
+                                display: false  // Set this to hide the legend
+                            }
+                        }
+
+                    });
+                }
             }
         }).fail(function (xhr, textStatus, errorThrown) {
             jQuery("#display-div").hide();
             jQuery("#topic_name").addClass("stop-fetch");
+            jQuery("#add_data tbody").html('');
         });
     }
 
-    function renderResponse(response) {
-        try {
-            const source = document.getElementById('card-template').innerHTML;
-            const template = Handlebars.compile(source);
 
-            // Get the container where you want to append the cards
-            const container = document.getElementById('cards-container');
-
-            // Clear the existing content in the container if needed
-            container.innerHTML = '';
-
-            // Iterate over the data and append a card for each item
-            response.forEach(item => {
-                const cardHtml = template(item);
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
-        } catch (error) {
-            console.error("Error rendering data:", error);
-        }
+    function sendDownloadAjaxRequest(dateRangeName, topicName) {
+        jQuery.ajax({
+            url: '/daterange',
+            type: 'POST',
+            data: { dateRange: dateRangeName, topic: topicName }
+        }).done(response => {
+            console.log("Success" + response.message);
+            var link = document.createElement('a');
+            console.log();
+            link.href = response.file;
+            link.download = 'output.txt';
+            var e = document.createEvent('MouseEvents');
+            e.initEvent('click', true, true);
+            link.dispatchEvent(e);
+        }).fail(function (xhr, textStatus, errorThrown) {
+            console.log("Fail" + errorThrown);
+        });
     }
 
 </script>

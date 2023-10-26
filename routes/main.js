@@ -112,17 +112,7 @@ router.route("/daterange").post(async (req, res) => {
                 data.push({ payload: item.payload.S, timestamp: displayDate });
 
             }
-
-
-            jsonData = JSON.stringify(data, null, 2);
-            // Save the data to a text file
-            fs.writeFile('output.txt', jsonData, 'utf8', (fileErr) => {
-                if (fileErr) {
-                    returnResult.message = "Error: Writing File Error";
-                    returnResult.status = 500
-                    logger.info("Error: Writing File Error")
-                }
-            });
+            jsonData = data;
         } else {
             returnResult.message = "No data to download for given topic";
             returnResult.status = 400;

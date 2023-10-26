@@ -197,7 +197,7 @@
         }).done(response => {
 
             if (response.status == 200) {
-                const fileContent = response.file;
+                const fileContent = formatAsTable(response.file, topicName, dateRangeName);
 
                 // Create a Blob from the file content
                 const blob = new Blob([fileContent], { type: 'text/plain' });
@@ -248,5 +248,33 @@
             });
         });
     }
+
+    function formatAsTable(data, topicName, dateRange) {
+        // Find the maximum width of each column
+        const columnWidths = {};
+        for (const entry of data) {
+            for (const key in entry) {
+                const value = entry[key].toString();
+                if (!columnWidths[key] || value.length > columnWidths[key]) {
+                    columnWidths[key] = value.length;
+                }
+            }
+        }
+
+        // Generate the table header
+        const header = Object.keys(data[0])
+            .map(key => key.padEnd(columnWidths[key]))
+            .join(' | ');
+
+        // Generate the table content
+        const content = data
+            .map(entry => Object.values(entry)
+                .map(value => value.toString().padEnd(columnWidths[Object.keys(entry)[Object.values(entry).indexOf(value)]]))
+                .join(' | '))
+            .join('\n');
+
+        return `'Topic: '${topicName}\n'Date Range:'${dateRange}\n{header}\n${'-'.repeat(header.length)}\n${content}`;
+    }
+
 
 </script>

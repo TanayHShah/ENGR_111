@@ -15,9 +15,12 @@ const dynamoDBConfig = {
 
 
 const dynamoDB = new DynamoDBClient(dynamoDBConfig);
-const timeConverter = async (UNIX_timestamp) => {
-
-    var a = new Date(UNIX_timestamp * 1000);
+const timeConverter = async (UNIX_timestamp, flag = false) => {
+    if (flag) {
+        var a = new Date(UNIX_timestamp * 1000 - 4 * 60 * 60 * 1000);
+    } else {
+        var a = new Date(UNIX_timestamp * 1000);
+    }
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var year = a.getFullYear();
     var month = months[a.getMonth()];
@@ -58,7 +61,7 @@ router.route("/topic").post(async (req, res) => {
         const result = await dynamoDB.send(command);
         for (let i = 1; i <= result.Items.length; i++) {
             const item = result.Items[i - 1];
-            const displayDate = await timeConverter(item.timestamp.N);
+            const displayDate = await timeConverter(item.timestamp.N, true);
             data.push({ payload: item.payload.S, timestamp: displayDate });
 
         }
@@ -73,57 +76,52 @@ router.route("/topic").post(async (req, res) => {
 router.route("/daterange").post(async (req, res) => {
     const dateRange = req.body.dateRange;
     const [startDateStr, endDateStr] = dateRange.split(" - ");
-
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr);
+    startDate.setHours(4, 0, 0, 0);
+    endDate.setDate(endDate.getDate() + 1);
+    endDate.setHours(3, 59, 59, 999);
     const startDateUnixTimestamp = String(Math.floor(startDate.getTime() / 1000));
     const endDateUnixTimestamp = String(Math.floor(endDate.getTime() / 1000));
     const topic = req.body.topic;
     const tableName = 'engr111_data_collection';
     const params = {
         TableName: tableName,
-        KeyConditionExpression: '#topic = :topic AND #timestamp BETWEEN :from AND :to',
+        KeyConditionExpression: "#topic = :topic AND #timestamp BETWEEN :from AND :to",
         ExpressionAttributeNames: {
-            '#topic': 'topic',
-            '#timestamp': 'timestamp',
+            "#topic": "topic",
+            "#timestamp": "timestamp",
         },
         ExpressionAttributeValues: {
-            ':topic': { S: topic },
-            ':from': { N: startDateUnixTimestamp },
-            ':to': { N: endDateUnixTimestamp },
+            ":topic": { S: topic },
+            ":from": { N: startDateUnixTimestamp },
+            ":to": { N: endDateUnixTimestamp },
         },
     };
     const command = new QueryCommand(params);
 
     let returnResult = { message: '', status: 200 };
+    let jsonData = '';
     try {
         const result = await dynamoDB.send(command);
+        console.log(result.Items.length);
         if (result.Items.length) {
             let data = [];
             for (let i = 1; i <= result.Items.length; i++) {
                 const item = result.Items[i - 1];
-                const displayDate = await timeConverter(item.timestamp.N);
+                const displayDate = await timeConverter(item.timestamp.N, true);
                 data.push({ payload: item.payload.S, timestamp: displayDate });
 
             }
 
 
-            const jsonData = JSON.stringify(data, null, 2);
+            jsonData = JSON.stringify(data, null, 2);
             // Save the data to a text file
             fs.writeFile('output.txt', jsonData, 'utf8', (fileErr) => {
                 if (fileErr) {
                     returnResult.message = "Error: Writing File Error";
                     returnResult.status = 500
                     logger.info("Error: Writing File Error")
-                } else {
-                    // res.download('output.txt', topic + '.txt', (downloadErr) => {
-                    //     if (downloadErr) {
-                    //         returnResult.message = "Error:" + downloadErr;
-                    //         returnResult.status = 500;
-                    //         logger.info("Error:" + downloadErr);
-                    //     }
-                    // });
-
                 }
             });
         } else {
@@ -133,9 +131,9 @@ router.route("/daterange").post(async (req, res) => {
     } catch (error) {
         let message = "Error:" + error;
         logger.info("Error:" + error)
-        return res.json({ message: message, status: 500, file: appDir + '/output.txt' });
+        return res.json({ message: message, status: 500, file: jsonData });
     }
-    return res.json({ message: returnResult.message, status: returnResult.status, file: appDir + '/output.txt' })
+    return res.json({ message: returnResult.message, status: returnResult.status, file: jsonData })
 }
 );
 module.exports = router;

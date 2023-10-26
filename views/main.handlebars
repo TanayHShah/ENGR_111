@@ -1,3 +1,7 @@
+<div class="alert hide">
+    <span class="fas fa-exclamation-circle"></span>
+    <span class="msg" id="error-message"></span>
+</div>
 <div class="aParent">
     <div>
         <form id="msform" class="display-form">
@@ -33,8 +37,8 @@
                 </table>
             </fieldset>
         </div>
-        <div class="line-chart">
-            <canvas id="line-chart" width="900px"></canvas>
+        <div class="canvas-container">
+            <canvas id="line-chart"></canvas>
         </div>
     </div>
 </div>
@@ -191,16 +195,57 @@
             type: 'POST',
             data: { dateRange: dateRangeName, topic: topicName }
         }).done(response => {
-            console.log("Success" + response.message);
-            var link = document.createElement('a');
-            console.log();
-            link.href = response.file;
-            link.download = 'output.txt';
-            var e = document.createEvent('MouseEvents');
-            e.initEvent('click', true, true);
-            link.dispatchEvent(e);
+
+            if (response.status == 200) {
+                const fileContent = response.file;
+
+                // Create a Blob from the file content
+                const blob = new Blob([fileContent], { type: 'text/plain' });
+
+                // Create a URL for the Blob
+                const blobUrl = URL.createObjectURL(blob);
+
+                // Create a link element to trigger the download
+                const downloadLink = document.createElement('a');
+                downloadLink.href = blobUrl;
+                downloadLink.download = topicName + '-' + dateRangeName + '.txt'; // Specify the desired filename
+
+                // Simulate a click to trigger the download
+                downloadLink.click();
+
+                // Clean up by revoking the Blob URL (to release resources)
+                URL.revokeObjectURL(blobUrl);
+            }
+            else {
+                jQuery("#error-message").html(response.message)
+                $('.alert').addClass("show");
+                $('.alert').removeClass("hide");
+                $('.alert').addClass("showAlert");
+                setTimeout(function () {
+                    $('.alert').removeClass("show");
+                    $('.alert').addClass("hide");
+                }, 5000);
+
+                $('.close-btn').click(function () {
+                    $('.alert').removeClass("show");
+                    $('.alert').addClass("hide");
+                });
+            }
+
         }).fail(function (xhr, textStatus, errorThrown) {
-            console.log("Fail" + errorThrown);
+            jQuery("#error-message").html(errorThrown)
+            $('.alert').addClass("show");
+            $('.alert').removeClass("hide");
+            $('.alert').addClass("showAlert");
+            setTimeout(function () {
+                $('.alert').removeClass("show");
+                $('.alert').addClass("hide");
+            }, 5000);
+
+            $('.close-btn').click(function () {
+                $('.alert').removeClass("show");
+                $('.alert').addClass("hide");
+            });
         });
     }
 

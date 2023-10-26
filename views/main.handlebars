@@ -53,7 +53,7 @@
             if (!jQuery("#topic_name").hasClass('stop-fetch')) {
                 sendAjaxRequest($('#topic_name').val())
             }
-        }, 5000);
+        }, 30000);
 
         $('input[name="daterange"]').daterangepicker();
         jQuery("#msform").validate({
@@ -273,7 +273,7 @@
                 .join(' | '))
             .join('\n');
 
-        return `'Topic: '${topicName}\n'Date Range:'${dateRange}\n{header}\n${'-'.repeat(header.length)}\n${content}`;
+        return `Topic: ${topicName}\nDate Range:${dateRange}\n\n${header}\n${'-'.repeat(header.length)}\n${content}`;
     }
 
 

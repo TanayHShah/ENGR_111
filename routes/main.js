@@ -52,7 +52,7 @@ router.route("/topic").post(async (req, res) => {
             ':topic': { S: topic },
         },
         ScanIndexForward: false, // Sort in descending order (latest first)
-        Limit: 100, // Limit to 2 records
+        Limit: 100, // Limit to 100 records
     };
 
     const command = new QueryCommand(params);
@@ -104,7 +104,6 @@ router.route("/daterange").post(async (req, res) => {
     let jsonData = '';
     try {
         const result = await dynamoDB.send(command);
-        console.log(result.Items.length);
         if (result.Items.length) {
             let data = [];
             for (let i = 1; i <= result.Items.length; i++) {

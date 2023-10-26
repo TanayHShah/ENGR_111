@@ -52,7 +52,7 @@ router.route("/topic").post(async (req, res) => {
             ':topic': { S: topic },
         },
         ScanIndexForward: false, // Sort in descending order (latest first)
-        Limit: 100, // Limit to 2 records
+        Limit: 100, // Limit to 100 records
     };
 
     const command = new QueryCommand(params);
@@ -104,7 +104,6 @@ router.route("/daterange").post(async (req, res) => {
     let jsonData = '';
     try {
         const result = await dynamoDB.send(command);
-        console.log(result.Items.length);
         if (result.Items.length) {
             let data = [];
             for (let i = 1; i <= result.Items.length; i++) {
@@ -113,17 +112,7 @@ router.route("/daterange").post(async (req, res) => {
                 data.push({ payload: item.payload.S, timestamp: displayDate });
 
             }
-
-
-            jsonData = JSON.stringify(data, null, 2);
-            // Save the data to a text file
-            fs.writeFile('output.txt', jsonData, 'utf8', (fileErr) => {
-                if (fileErr) {
-                    returnResult.message = "Error: Writing File Error";
-                    returnResult.status = 500
-                    logger.info("Error: Writing File Error")
-                }
-            });
+            jsonData = data;
         } else {
             returnResult.message = "No data to download for given topic";
             returnResult.status = 400;

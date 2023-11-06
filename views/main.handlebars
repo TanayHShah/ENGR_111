@@ -157,8 +157,10 @@
                 if (existingChart) {
                     // Update the existing chart with new data
                     existingChart.data.labels = dateArray;
+                    existingChart.data.datasets[0].label = topicName;
                     existingChart.data.datasets[0].data = dataArray;
                     existingChart.update();
+                 
                 } else {
                     new Chart(document.getElementById("line-chart"), {
                         type: 'line',

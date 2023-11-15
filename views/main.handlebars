@@ -22,7 +22,7 @@
             <fieldset>
                 <h2 class="fs-title">Select Date to Download</h2>
                 <input type="text" name="daterange" id="daterange_name" />
-                <input type="submit" name="next" class="action-button" value="Download" />
+                <input type="submit" name="next" id="download_button" class="action-button" value="Download" />
             </fieldset>
 
         </form>
@@ -47,6 +47,7 @@
     jQuery('#topic_name').on('input', function () {
         jQuery("#display-div").hide();
         jQuery("#topic_name").addClass("stop-fetch");
+        enableSubmit($("#download_button"))
     });
     jQuery(document).ready(function () {
         setInterval(function () {
@@ -190,6 +191,9 @@
         });
     }
 
+    var enableSubmit = function (ele) {
+        $(ele).removeAttr("disabled");
+    }
 
     function sendDownloadAjaxRequest(dateRangeName, topicName) {
         jQuery.ajax({
@@ -197,7 +201,8 @@
             type: 'POST',
             data: { dateRange: dateRangeName, topic: topicName }
         }).done(response => {
-
+            $("#download_button").attr("disabled", true);
+            setTimeout(function () { enableSubmit($("#download_button")) }, 50000);
             if (response.status == 200) {
                 const fileContent = formatAsTable(response.file, topicName, dateRangeName);
 

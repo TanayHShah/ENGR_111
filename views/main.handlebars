@@ -47,6 +47,7 @@
     jQuery('#topic_name').on('input', function () {
         jQuery("#display-div").hide();
         jQuery("#topic_name").addClass("stop-fetch");
+        enableSubmit($("#download_button"))
     });
     jQuery(document).ready(function () {
         setInterval(function () {

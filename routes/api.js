@@ -30,9 +30,19 @@ router.route("/team").post(async (req, res) => {
     Item: {
       id: { S: newObjectId.toString() },
       name: { S: teamData.name.toString() },
-      score_1: { N: teamData.score_1.toString() },
-      score_2: { N: teamData.score_2.toString() },
-      total_score: { N: (teamData.score_1 + teamData.score_2).toString() },
+      score_1: {
+        N: teamData.score_1 ? teamData.score_1 : 0,
+      },
+      score_2: {
+        N: teamData.score_2 ? teamData.score_2 : 0,
+      },
+      score_3: {
+        N: teamData.score_3 ? teamData.score_3 : 0,
+      },
+      prof_email: { S: teamData.prof_name.toString() },
+      total_score: {
+        N: teamData.score_1 + teamData.score_2 + teamData.score_3,
+      },
       timestamp: { N: String(timestamp) },
     },
   };
@@ -44,7 +54,6 @@ router.route("/team").post(async (req, res) => {
     data.message = error;
   }
   return res.status(data.status).send(data.message);
-
 });
 
 module.exports = router;

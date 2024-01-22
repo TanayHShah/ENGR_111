@@ -31,17 +31,20 @@ router.route("/team").post(async (req, res) => {
       id: { S: newObjectId.toString() },
       name: { S: teamData.name.toString() },
       score_1: {
-        N: teamData.score_1 ? teamData.score_1 : 0,
+        N: teamData.score_1 ? teamData.score_1.toString() : String(0),
       },
       score_2: {
-        N: teamData.score_2 ? teamData.score_2 : 0,
+        N: teamData.score_2 ? teamData.score_2.toString() : String(0),
       },
       score_3: {
-        N: teamData.score_3 ? teamData.score_3 : 0,
+        N: teamData.score_3 ? teamData.score_3.toString() : String(0),
       },
       prof_email: { S: teamData.prof_name.toString() },
       total_score: {
-        N: teamData.score_1 + teamData.score_2 + teamData.score_3,
+        N:
+          (teamData.score_1 ? teamData.score_1.toString() : String(0)) +
+          (teamData.score_2 ? teamData.score_2.toString() : String(0)) +
+          (teamData.score_3 ? teamData.score_3.toString() : String(0)),
       },
       timestamp: { N: String(timestamp) },
     },
